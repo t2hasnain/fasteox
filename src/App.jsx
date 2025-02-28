@@ -1,209 +1,94 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Confetti from 'react-confetti';
+import { motion } from 'framer-motion';
 
-const AdvancedGreeting = () => {
-  const [name, setName] = useState('');
-  const [isValidName, setIsValidName] = useState(false);
-  const [isSpecialName, setIsSpecialName] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isRotating, setIsRotating] = useState(false);
+const LaunchTimer = () => {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [progress, setProgress] = useState(0);
 
-  // Generate emojis based on name type
-  const generateEmojis = (count) => 
-    Array.from({ length: count }, (_, i) => ({
-      id: i,
-      emoji: isSpecialName 
-        ? ['💐', '🌠', '💫', '🌸', '🎇', '🌌', '✨'][i % 7]
-        : ['🌟', '💖', '🌙', '✨', '🎆'][i % 5],
-      style: {
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        animationDelay: `${Math.random() * 2}s`,
-      }
-    }));
+  // Target date: November 15, 2025
+  const targetDate = new Date('2025-11-15T00:00:00').getTime();
+  const startDate = new Date('2023-01-01T00:00:00').getTime(); // Customize start date
 
   useEffect(() => {
-    const valid = name.length > 4;
-    setIsValidName(valid);
-    setIsSpecialName(name.toLowerCase() === 'rania');
-  }, [name]);
+    const calculateTime = () => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
 
-  const handleSubmit = () => {
-    setIsRotating(true);
-    setTimeout(() => {
-      setIsRotating(false);
-      setIsSubmitted(true);
-    }, isSpecialName ? 4000 : 2000);
-  };
+      // Time calculations
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      // Progress calculation
+      const totalDuration = targetDate - startDate;
+      const elapsed = now - startDate;
+      const percentage = Math.min((elapsed / totalDuration) * 100, 100);
+
+      setTimeLeft({ days, hours, minutes, seconds });
+      setProgress(percentage);
+    };
+
+    const timer = setInterval(calculateTime, 1000);
+    calculateTime(); // Initial calculation
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const TimeBlock = ({ value, label }) => (
+    <motion.div 
+      className="flex flex-col items-center p-4 bg-white/5 backdrop-blur-lg rounded-xl shadow-xl"
+      whileHover={{ scale: 1.05 }}
+    >
+      <div className="text-6xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+        {value.toString().padStart(2, '0')}
+      </div>
+      <div className="text-gray-400 mt-2 uppercase text-sm tracking-widest">
+        {label}
+      </div>
+    </motion.div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-purple-900 flex flex-col items-center justify-center overflow-hidden">
-      {/* Conditional Header */}
-      <AnimatePresence>
-        {isValidName && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className={`text-4xl font-bold mb-8 ${
-              isSpecialName 
-                ? 'bg-gradient-to-r from-pink-400 to-purple-500'
-                : 'bg-gradient-to-r from-cyan-400 to-blue-500'
-            } bg-clip-text text-transparent`}
-          >
-            {isSpecialName ? 'HY Rania' : `Hello ${name}`}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900 flex flex-col items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-center mb-12"
+      >
+        <h1 className="text-5xl font-bold text-white mb-4">Coming Soon</h1>
+        <p className="text-xl text-gray-300">Launching November 15, 2025</p>
+      </motion.div>
 
-      {/* Input Field */}
-      <input
-        type="text"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="px-8 py-4 text-2xl rounded-full bg-black/30 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-pink-500 backdrop-blur-lg"
-        placeholder="Enter your name"
-      />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <TimeBlock value={timeLeft.days} label="Days" />
+        <TimeBlock value={timeLeft.hours} label="Hours" />
+        <TimeBlock value={timeLeft.minutes} label="Minutes" />
+        <TimeBlock value={timeLeft.seconds} label="Seconds" />
+      </div>
 
-      {/* Submit Button */}
-      <AnimatePresence>
-        {isValidName && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            onClick={handleSubmit}
-            className={`mt-8 px-12 py-4 text-xl font-bold rounded-full ${
-              isSpecialName
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600'
-                : 'bg-gradient-to-r from-cyan-500 to-blue-600'
-            } hover:scale-105 transition-transform relative overflow-hidden`}
-          >
-            <motion.span
-              animate={{ rotate: isRotating ? 360 : 0 }}
-              transition={{ 
-                duration: isSpecialName ? 0.8 : 1.2,
-                repeat: isRotating ? Infinity : 0 
-              }}
-              className="block"
-            >
-              {isRotating ? '🎇' : 'Submit'}
-            </motion.span>
-          </motion.button>
-        )}
-      </AnimatePresence>
+      <motion.div 
+        className="w-full max-w-2xl bg-white/10 rounded-full h-4 mb-8"
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ duration: 1.5 }}
+      >
+        <div 
+          className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-1000"
+          style={{ width: `${progress}%` }}
+        />
+      </motion.div>
 
-      {/* Main Animation */}
-      <AnimatePresence>
-        {isSubmitted && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center">
-            <Confetti
-              numberOfPieces={isSpecialName ? 800 : 400}
-              recycle={false}
-              gravity={isSpecialName ? 0.1 : 0.3}
-              wind={isSpecialName ? 0.1 : 0.05}
-              colors={isSpecialName 
-                ? ['#FF69B4', '#FF1493', '#FF00FF', '#9400D3']
-                : ['#00FFFF', '#00BFFF', '#1E90FF', '#4169E1']}
-            />
-
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ 
-                type: 'spring', 
-                stiffness: isSpecialName ? 120 : 100,
-                damping: isSpecialName ? 8 : 10
-              }}
-              className="text-center z-50"
-            >
-              <h1 className="text-7xl font-bold mb-8 bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
-                Ramzan Mubarak!
-              </h1>
-              
-              {/* Special Down-to-Up Fireworks for Rania */}
-              {isSpecialName && (
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {generateEmojis(30).map(({ id, emoji, style }) => (
-                    <motion.div
-                      key={id}
-                      className="absolute text-4xl"
-                      style={style}
-                      initial={{ y: 100, opacity: 0 }}
-                      animate={{ y: -100, opacity: [1, 0] }}
-                      transition={{
-                        duration: 2 + Math.random() * 2,
-                        repeat: Infinity,
-                        ease: 'linear'
-                      }}
-                    >
-                      {emoji}
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* Standard Animation */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {generateEmojis(isSpecialName ? 100 : 50).map(({ id, emoji, style }) => (
-                  <motion.div
-                    key={id}
-                    className="absolute text-4xl animate-float"
-                    style={style}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{
-                      duration: 2 + Math.random() * 3,
-                      repeat: Infinity,
-                      delay: Math.random() * 2
-                    }}
-                  >
-                    {emoji}
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Default Greeting */}
-      {!isSubmitted && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-3xl text-white/80 mt-12 text-center"
-        >
-          <p>Ramzan Mubarak To You With Best Wishes!</p>
-          <div className="flex justify-center space-x-4 mt-4">
-            <motion.span 
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-            >
-              💖
-            </motion.span>
-            <motion.span
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
-            >
-              🌙
-            </motion.span>
-            <motion.span
-              animate={{ y: [0, -20, 0] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-            >
-              🌟
-            </motion.span>
-          </div>
-        </motion.div>
-      )}
-      <h1 className="text-amber-50 relative top-40"> Made by t2hasnain</h1>
-      <h1 className="text-amber-50 relative top-40 left-2"> share with your friends❤️ updated soon </h1>
-      <h1 className="text-amber-50 relative top-40 left-2"> </h1>
-
+      <motion.div
+        className="text-gray-400 text-lg"
+        animate={{ opacity: [0.8, 1, 0.8] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        Stay tuned for something amazing!
+      </motion.div>
     </div>
   );
 };
 
-export default AdvancedGreeting;
+export default LaunchTimer;
